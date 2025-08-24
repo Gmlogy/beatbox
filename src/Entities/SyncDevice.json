@@ -1,0 +1,59 @@
+{
+  "name": "SyncDevice",
+  "type": "object",
+  "properties": {
+    "device_name": {
+      "type": "string",
+      "description": "Android device name"
+    },
+    "device_model": {
+      "type": "string",
+      "description": "Device model"
+    },
+    "build_fingerprint": {
+      "type": "string",
+      "description": "Android build fingerprint"
+    },
+    "sync_folder": {
+      "type": "string",
+      "description": "Target sync folder on device",
+      "default": "/Music/"
+    },
+    "storage_total": {
+      "type": "number",
+      "description": "Total storage in bytes"
+    },
+    "storage_used": {
+      "type": "number",
+      "description": "Used storage in bytes"
+    },
+    "last_sync": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last sync timestamp"
+    },
+    "is_connected": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether device is currently connected"
+    },
+    "sync_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether sync is enabled for this device"
+    },
+    "auto_convert": {
+      "type": "boolean",
+      "default": false,
+      "description": "Auto convert FLAC to MP3"
+    },
+    "selected_playlists": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Playlist IDs selected for sync"
+    },
+    "selected_tracks": {
+      "type": "array",
+ 

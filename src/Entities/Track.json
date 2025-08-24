@@ -1,0 +1,105 @@
+{
+  "name": "Track",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Song title"
+    },
+    "artist": {
+      "type": "string",
+      "description": "Artist name"
+    },
+    "album": {
+      "type": "string",
+      "description": "Album name"
+    },
+    "genre": {
+      "type": "string",
+      "description": "Music genre"
+    },
+    "year": {
+      "type": "number",
+      "description": "Release year"
+    },
+    "track_number": {
+      "type": "number",
+      "description": "Track number in album"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Duration in seconds"
+    },
+    "bitrate": {
+      "type": "string",
+      "description": "Audio bitrate"
+    },
+    "file_format": {
+      "type": "string",
+      "enum": [
+        "MP3",
+        "AAC",
+        "FLAC",
+        "ALAC",
+        "AIFF",
+        "WAV"
+      ],
+      "description": "Audio file format"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "file_path": {
+      "type": "string",
+      "description": "File path on system"
+    },
+    "album_art_url": {
+      "type": "string",
+      "description": "Album artwork URL"
+    },
+    "is_favorite": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the track is marked as a favorite"
+    },
+    "play_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times played"
+    },
+    "last_played": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last played timestamp"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Automatically generated tags for discovery (e.g., 'Classic', '90s Rock')"
+    },
+    "lyrics": {
+      "type": "string",
+      "description": "Song lyrics"
+    },
+    "replay_gain_track": {
+      "type": "number",
+      "description": "ReplayGain value for track loudness"
+    },
+    "replay_gain_album": {
+      "type": "number",
+      "description": "ReplayGain value for album loudness"
+    },
+    "acoustid_fingerprint": {
+      "type": "string",
+      "description": "Acoustic fingerprint of the audio"
+    }
+  },
+  "required": [
+    "title",
+    "artist",
+    "file_format"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "PlayHistory",
+  "type": "object",
+  "properties": {
+    "track_id": {
+      "type": "string",
+      "description": "The ID of the track that was played."
+    },
+    "duration_played": {
+      "type": "number",
+      "description": "How many seconds of the track were played before stopping or skipping."
+    },
+    "was_skipped": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the user skipped the track before it finished."
+    }
+  },
+  "required": [
+    "track_id",
+    "duration_played"
+  ]
+}

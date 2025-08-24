@@ -1,0 +1,59 @@
+{
+  "name": "SyncJob",
+  "type": "object",
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "description": "ID of the target device"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "completed",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "Sync job status"
+    },
+    "total_files": {
+      "type": "number",
+      "description": "Total number of files to sync"
+    },
+    "completed_files": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of files completed"
+    },
+    "total_size": {
+      "type": "number",
+      "description": "Total size in bytes"
+    },
+    "transferred_size": {
+      "type": "number",
+      "default": 0,
+      "description": "Bytes transferred so far"
+    },
+    "current_file": {
+      "type": "string",
+      "description": "Currently syncing file name"
+    },
+    "error_message": {
+      "type": "string",
+      "description": "Error message if sync failed"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Sync start time"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Sync completion time"
+    },
+    "time_remaining_seconds": {
+      "type": "number",
+      "description": "Estimated time remaining in seconds"
+ 
