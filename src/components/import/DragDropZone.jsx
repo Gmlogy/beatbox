@@ -1,80 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { Track } from '@/api/entities';
-import { Upload, Music, FileX, CheckCircle } from 'lucide-react';
-
-const SUPPORTED_FORMATS = ['mp3', 'aac', 'flac', 'alac', 'aiff', 'wav', 'm4a', 'ogg'];
+import { Button } from '@/components/ui/button';
+import { Upload, Music } from 'lucide-react';
 
 const DragDropZone = ({ onImportComplete, children }) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [importProgress, setImportProgress] = useState(0);
-  const [importedCount, setImportedCount] = useState(0);
+  const [message, setMessage] = useState('');
 
-  const handleDragOver = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Check if we have files being dragged
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      const hasAudioFiles = Array.from(e.dataTransfer.items).some(item => {
-        if (item.kind === 'file') {
-          const extension = item.type.split('/')[1] || '';
-          return SUPPORTED_FORMATS.includes(extension.toLowerCase());
-        }
-        return false;
-      });
-      
-      if (hasAudioFiles) {
-        setIsDragOver(true);
-      }
+  const handleFolderImport = async () => {
+    const folderPath = await window.api.selectFolder();
+    if (!folderPath) {
+      return;
     }
-  }, []);
-
-  const handleDragLeave = useCallback((e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Only remove drag state if we're actually leaving the drop zone
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      setIsDragOver(false);
-    }
-  }, []);
-
-  const extractMetadataFromFile = (file) => {
-    // Extract basic metadata from filename and file properties
-    const filename = file.name;
-    const nameWithoutExtension = filename.replace(/\.[^/.]+$/, "");
-    
-    // Try to parse artist - title format
-    let title = nameWithoutExtension;
-    let artist = "Unknown Artist";
-    
-    if (nameWithoutExtension.includes(' - ')) {
-      const parts = nameWithoutExtension.split(' - ');
-      if (parts.length >= 2) {
-        artist = parts[0].trim();
-        title = parts.slice(1).join(' - ').trim();
-      }
-    }
-
-    return {
-      title,
-      artist,
-      album: "Unknown Album",
-      genre: "Unknown",
-      year: new Date().getFullYear(),
-      duration: 0, // Would need audio analysis to get real duration
-      bitrate: "Unknown",
-      file_format: file.name.split('.').pop().toUpperCase(),
-      file_size: file.size,
-      file_path: `/imported/${file.name}`,
-      rating: 0,
-      play_count: 0
-    };
+    await startImportProcess(folderPath);
   };
 
   const handleDrop = useCallback(async (e) => {
@@ -83,72 +21,47 @@ const DragDropZone = ({ onImportComplete, children }) => {
     setIsDragOver(false);
 
     const files = Array.from(e.dataTransfer.files);
-    const audioFiles = files.filter(file => {
-      const extension = file.name.split('.').pop().toLowerCase();
-      return SUPPORTED_FORMATS.includes(extension);
-    });
+    if (files.length === 0) return;
 
-    if (audioFiles.length === 0) {
-      // Show error toast
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-16 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-      toast.textContent = 'No supported audio files found. Supported formats: MP3, AAC, FLAC, ALAC, AIFF, WAV';
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 4000);
+    const folderPath = files[0].path.substring(0, files[0].path.lastIndexOf('\\'));
+    if (!folderPath) {
+      alert("Could not determine the folder from the dropped files.");
       return;
     }
+    await startImportProcess(folderPath);
+  }, []);
 
+  const startImportProcess = async (path) => {
     setIsImporting(true);
-    setImportedCount(0);
-    setImportProgress(0);
+    setMessage(`Scanning for music in: ${path}...`);
 
     try {
-      for (let i = 0; i < audioFiles.length; i++) {
-        const file = audioFiles[i];
-        const metadata = extractMetadataFromFile(file);
-        
-        // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        await Track.create(metadata);
-        
-        setImportedCount(i + 1);
-        setImportProgress(((i + 1) / audioFiles.length) * 100);
+      const result = await window.api.importFolder(path);
+      if (result.success) {
+        setMessage(`Import complete! Added ${result.importedCount} new tracks.`);
+        onImportComplete?.();
+      } else {
+        setMessage(`Import failed: ${result.error}`);
       }
-
-      // Success toast
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-16 right-4 bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-      toast.textContent = `Successfully imported ${audioFiles.length} track${audioFiles.length !== 1 ? 's' : ''}!`;
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 3000);
-
-      onImportComplete?.();
-      
     } catch (error) {
-      console.error('Error importing files:', error);
-      
-      // Error toast
-      const toast = document.createElement('div');
-      toast.className = 'fixed top-16 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-      toast.textContent = 'Error importing files. Please try again.';
-      document.body.appendChild(toast);
-      setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => document.body.removeChild(toast), 300);
-      }, 3000);
+      setMessage(`An unexpected error occurred: ${error.message}`);
+      console.error('Import process failed:', error);
     }
 
     setIsImporting(false);
-    setImportProgress(0);
-    setImportedCount(0);
-  }, [onImportComplete]);
+  };
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
 
   return (
     <div
@@ -159,61 +72,29 @@ const DragDropZone = ({ onImportComplete, children }) => {
     >
       {children}
       
-      {/* Drag Overlay */}
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 bg-white dark:bg-slate-800 p-4 rounded-lg shadow-lg border dark:border-slate-700">
+        <p className="text-center mb-2 text-sm text-slate-600 dark:text-slate-400">Import music from a folder</p>
+        <Button onClick={handleFolderImport} disabled={isImporting}>
+          {isImporting ? 'Scanning...' : 'Select Folder'}
+        </Button>
+      </div>
+      
       {isDragOver && (
         <div className="fixed inset-0 bg-blue-600/20 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-8 shadow-2xl border-2 border-dashed border-blue-500 max-w-md mx-4">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Upload className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Drop Audio Files Here
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400">
-                Release to import your music files
-              </p>
-              <div className="flex justify-center gap-2 mt-4">
-                {SUPPORTED_FORMATS.slice(0, 4).map(format => (
-                  <span key={format} className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-                    {format.toUpperCase()}
-                  </span>
-                ))}
-                <span className="text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2 py-1 rounded">
-                  +{SUPPORTED_FORMATS.length - 4} more
-                </span>
-              </div>
-            </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-8 shadow-2xl border-2 border-dashed border-blue-500 text-center">
+            <Upload className="w-12 h-12 text-blue-500 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold">Drop Your Music Folder</h3>
+            <p className="text-slate-500">Release to start importing</p>
           </div>
         </div>
       )}
 
-      {/* Import Progress Overlay */}
       {isImporting && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-8 shadow-2xl max-w-md mx-4">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/50 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <Music className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
-                Importing Music...
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-4">
-                Processing and adding files to your library
-              </p>
-              
-              <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mb-3">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${importProgress}%` }}
-                />
-              </div>
-              
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {importedCount} files imported
-              </p>
-            </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-8 shadow-2xl text-center">
+            <Music className="w-12 h-12 text-blue-500 mx-auto mb-4 animate-pulse" />
+            <h3 className="text-xl font-semibold">Importing Music...</h3>
+            <p className="text-slate-500 max-w-sm">{message}</p>
           </div>
         </div>
       )}

@@ -46,7 +46,7 @@ import { ThemeProvider, useTheme } from "@/components/providers/ThemeProvider";
 import PlaylistContextMenu from "@/components/playlists/PlaylistContextMenu";
 import RenamePlaylistDialog from "@/components/playlists/RenamePlaylistDialog";
 import GlobalSearchResults from "@/components/search/GlobalSearchResults";
-import DragDropZone from "@/components/import/DragDropZone";
+import DragDropZone from '@/components/import/DragDropZone.jsx';
 import { DataProvider, useData } from "@/components/providers/DataProvider";
 import { exportPlaylist } from "@/api/functions"; // Added import
 import KeyboardShortcuts from "@/components/shared/KeyboardShortcuts";
